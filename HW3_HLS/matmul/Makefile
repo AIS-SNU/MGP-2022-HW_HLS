@@ -26,6 +26,22 @@ XCLBIN := krnl_matmul.$(TARGET).$(DEVICE).xclbin
 CXXFLAGS += -I$(XILINX_XRT)/include/ -I$(XILINX_VIVADO)/include/ -Wall -O0 -g -std=c++11 -L$(XILINX_XRT)/lib/ -lOpenCL -pthread -lrt -lstdc++
 CXXFLAGS2 := -lOpenCL
 
+
+###
+####
+#AUTOPILOT_ROOT := /opt/xilinx/Vitis_HLS/2022.2
+
+#ASSEMBLE_SRC_ROOT := .
+#IFLAG += -I "${AUTOPILOT_ROOT}/include"
+
+#IFLAG += -D__SIM_FPO__ -D__SIM_OPENCV__ -D__SIM_FFT__ -D__SIM_FIR__ -D__SIM_DDS__ -D__DSP48E1__
+####
+####
+
+
+
+
+
 # Kernel compiler & linker global settings
 #CLFLAGS := -t $(TARGET) --platform $(DEVICE) --config compile.cfg
 #LDCLFLAGS := -t $(TARGET) --platform $(DEVICE) --config link.cfg

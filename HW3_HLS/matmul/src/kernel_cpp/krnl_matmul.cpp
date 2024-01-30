@@ -53,9 +53,9 @@ ALL TIMES.
 
 
 void krnl_matmul(
-                int** a,
-                int** b,
-                int** c,
+                int* a,
+                int* b,
+                int* c,
                 const int n_elements)
 {
 
@@ -81,7 +81,7 @@ void krnl_matmul(
         for(int j = 0; j < n_elements; j++) {
 	#pragma HLS pipeline ii = 1 rewind
 
-            MatA[i][j] = a[i][j];
+            MatA[i][j] = a[i*n_elements+j];
         }
     }
 
@@ -91,7 +91,7 @@ void krnl_matmul(
         //MAT_B_COLS:
         for(int j = 0; j < n_elements; j++) {
 	#pragma HLS pipeline ii = 1 rewind
-            MatB[i][j] = b[i][j];
+            MatB[i][j] = b[i*n_elements+j];
         }
     }
 
@@ -135,7 +135,7 @@ void krnl_matmul(
         //MAT_C_COLS:
         for(int j = 0; j < n_elements; j++) {
 	#pragma HLS pipeline ii = 1 rewind
-            c[i][j] = MatC[i][j];
+            c[i*n_elements+j] = MatC[i][j];
         }
     }
 }

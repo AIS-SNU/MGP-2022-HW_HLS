@@ -17,9 +17,9 @@
 typedef ap_int<16> real_t;
 
 void krnl_matmul(
-                int** a,
-                int** b,
-                int** c,
+                int* a,
+                int* b,
+                int* c,
                 const int n_elements
 		);
 

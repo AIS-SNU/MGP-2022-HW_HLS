@@ -55,6 +55,9 @@ ALL TIMES.
 #include <unistd.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <chrono>
+#include <math.h>
+
 
 static const int DATA_SIZE = 4096;
 
@@ -158,14 +161,14 @@ int main(int argc, char* argv[]) {
 	}
 	 
     // Compute the size of array in bytes
-    size_t size_in_bytes = DATA_SIZE * sizeof(int);
+    size_t size_in_bytes = DATA_SIZE * DATA_SIZE * sizeof(int);
     
     // Creates a vector of DATA_SIZE elements with an initial value of 10 and 32
     // using customized allocator for getting buffer alignment to 4k boundary
     std::vector<std::vector<int>> source_a(DATA_SIZE, std::vector<int>(DATA_SIZE, 10));
     std::vector<std::vector<int>> source_b(DATA_SIZE, std::vector<int>(DATA_SIZE, 32));
     std::vector<std::vector<int>> source_results(DATA_SIZE, std::vector<int>(DATA_SIZE));
-    std::vector<std::vector<int>> source_result_cpu(DATA_SIZE, std::vector<int>(DATA_SIZE,0));
+    std::int16_t source_result_cpu [DATA_SIZE][DATA_SIZE];
     
 
     std::vector<cl::Device> devices = xcl::get_xil_devices();
@@ -207,6 +210,8 @@ int main(int argc, char* argv[]) {
     
     // Data will be transferred from system memory over PCIe to the FPGA on-board
     // DDR memory.
+    //
+    auto fpga_begin = std::chrono::high_resolution_clock::now();
     q.enqueueMigrateMemObjects({buffer_a,buffer_b},0/* 0 means from host*/);
 
     //set the kernel Arguments
@@ -217,6 +222,8 @@ int main(int argc, char* argv[]) {
     krnl_matmul.setArg(3,DATA_SIZE);
 
 
+    //auto fpga_begin = std::chrono::high_resolution_clock::now();
+
     //Launch the Kernel
     q.enqueueTask(krnl_matmul);
 
@@ -225,10 +232,15 @@ int main(int argc, char* argv[]) {
     // source_results vector
 
     q.enqueueMigrateMemObjects({buffer_result},CL_MIGRATE_MEM_OBJECT_HOST);
+    auto fpga_end = std::chrono::high_resolution_clock::now();
+
 
     q.finish();
+ 
+ 
+    //cpu compute
 
-   //cpu compute   
+    auto cpu_begin = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < DATA_SIZE; i++){
         for (int j = 0; j < DATA_SIZE; j++){
 	     for (int k = 0; k < DATA_SIZE; k++){
@@ -236,6 +248,7 @@ int main(int argc, char* argv[]) {
 	     }
 	}
     }
+    auto cpu_end = std::chrono::high_resolution_clock::now();
 
 
     //Verify the result
@@ -252,5 +265,18 @@ int main(int argc, char* argv[]) {
 
     std::cout << "TEST WITH ONE KERNEL " << (match ? "FAILED" : "PASSED") << std::endl; 
     return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
+    std::chrono::duration<double> fpga_duration = fpga_end - fpga_begin;
+    std::cout << "FPGA Time:       " << fpga_duration.count() << " s" << std::endl;
+    std::cout << "FPGA Throughput: "
+              << (double) numRuns*3*nbytes / fpga_duration.count() / (1024.0*1024.0)
+              << " MB/s" << std::endl;
+
+    std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
+    std::cout << "CPU Time:        " << cpu_duration.count() << " s" << std::endl;
+    std::cout << "CPU Throughput:  "
+              << (double) numRuns*3*nbytes / cpu_duration.count() / (1024.0*1024.0)
+              << " MB/s" << std::endl;
+
+    std::cout << "FPGA Speedup:    " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
 
 }
