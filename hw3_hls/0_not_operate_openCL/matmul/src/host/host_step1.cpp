@@ -59,7 +59,7 @@ ALL TIMES.
 #include <math.h>
 
 
-static const int DATA_SIZE = 4096;
+static const int DATA_SIZE = 256;
 
 static const std::string error_message =
     "Error: Result mismatch:\n"
@@ -225,7 +225,9 @@ int main(int argc, char* argv[]) {
     //auto fpga_begin = std::chrono::high_resolution_clock::now();
 
     //Launch the Kernel
+    auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
     q.enqueueTask(krnl_matmul);
+    auto fpga_cal_end = std::chrono::high_resolution_clock::now();
 
     // The result of the previous kernel execution will need to be retrieved in
     // order to view the results. This call will transfer the data from FPGA to
@@ -265,17 +267,16 @@ int main(int argc, char* argv[]) {
 
     std::cout << "TEST WITH ONE KERNEL " << (match ? "FAILED" : "PASSED") << std::endl; 
     return (match ? EXIT_FAILURE :  EXIT_SUCCESS);
+
+    std::chrono::duration<double> fpga_cal_duration = fpga_cal_end - fpga_cal_begin;
+    std::cout << "FPGA Cal Time:       " << fpga_cal_duration.count() << " s" << std::endl;
+
+
     std::chrono::duration<double> fpga_duration = fpga_end - fpga_begin;
     std::cout << "FPGA Time:       " << fpga_duration.count() << " s" << std::endl;
-    std::cout << "FPGA Throughput: "
-              << (double) numRuns*3*nbytes / fpga_duration.count() / (1024.0*1024.0)
-              << " MB/s" << std::endl;
 
     std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
     std::cout << "CPU Time:        " << cpu_duration.count() << " s" << std::endl;
-    std::cout << "CPU Throughput:  "
-              << (double) numRuns*3*nbytes / cpu_duration.count() / (1024.0*1024.0)
-              << " MB/s" << std::endl;
 
     std::cout << "FPGA Speedup:    " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
 

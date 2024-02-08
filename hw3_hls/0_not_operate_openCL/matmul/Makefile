@@ -15,7 +15,7 @@ help:
 	@echo "      Command to remove the generated files."
 	@echo ""
 #######################################################################################
-TARGET := hw
+TARGET := hw_emu
 DEVICE := xilinx_u50_gen3x16_xdma_5_202210_1
 LAB := run1
 EXECUTABLE := host

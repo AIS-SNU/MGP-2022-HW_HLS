@@ -52,6 +52,9 @@ ALL TIMES.
 #include "real.h"
 
 
+#define n_element 256
+
+
 void krnl_matmul(
                 int* a,
                 int* b,
@@ -69,12 +72,12 @@ void krnl_matmul(
 
 #pragma HLS INTERFACE s_axilite port=n_elements  bundle=control
 #pragma HLS INTERFACE s_axilite port=return bundle=control
-       real_t MatA[n_elements][n_elements];
-       real_t MatB[n_elements][n_elements];
-       real_t MatC[n_elements][n_elements];
+       real_t MatA[n_element][n_element];
+       real_t MatB[n_element][n_element];
+       real_t MatC[n_element][n_element];
 
 
-       // Read in the data (Matrix A) from DRAM to BRAM
+    // Read in the data (Matrix A) from DRAM to BRAM
     //MAT_A_ROWS:
     for(int i = 0; i < n_elements; i++) {
         //MAT_A_COLS:
@@ -105,23 +108,23 @@ void krnl_matmul(
         }
     }
 
-#pragma HLS array_partiotion variable=MatB dim=1 factor=64 cyclic
-#pragma HLS array_partiotion variable=MatB dim=2 factor=64 cyclic
-#pragma HLS array_partiotion variable=MatA dim=1 factor=64 cyclic
-#pragma HLS array_partiotion variable=MatC dim=2 factor=64 cyclic
+#pragma HLS array_partiotion variable=MatB dim=1 factor=8 cyclic
+#pragma HLS array_partiotion variable=MatB dim=2 factor=8 cyclic
+#pragma HLS array_partiotion variable=MatA dim=1 factor=8 cyclic
+#pragma HLS array_partiotion variable=MatC dim=2 factor=8 cyclic
 
     real_t temp[n_elements];
 
     // Perform matrix multiplication
     //OUTER_ROWS:
-    for(int i = 0; i < n_elements; i+=64) {
+    for(int i = 0; i < n_elements; i+=8) {
         //OUTER_COLS:
         for(int p = 0; p < n_elements; p++) {
             //INNER_ROW_COLS:
-            for(int j = 0; j < n_elements ; j+=64) {
+            for(int j = 0; j < n_elements ; j+=8) {
             #pragma HLS pipeline
-                for(int ii=0; ii < 64; ii++){
-                  for(int jj=0; jj < 64; jj++){
+                for(int ii=0; ii < 8; ii++){
+                  for(int jj=0; jj < 8; jj++){
                      MatC[i+ii][j+jj] +=  MatA[i+ii][p] * MatB[p][j+jj];
                   }
                 }
