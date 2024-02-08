@@ -36,7 +36,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <chrono>
 #include <math.h>
-
+#include <omp.h>
 
 // XRT includes
 #include "experimental/xrt_bo.h"
@@ -87,7 +87,8 @@ int main(int argc, char **argv) {
 
   auto cpu_begin = std::chrono::high_resolution_clock::now();
 
-
+omp_set_num_threads(16);  
+#pragma omp parallel for 
     for (int i = 0; i < MATRIX_LEN; i++){
      for (int k = 0; k < MATRIX_LEN; k++){
       for (int j = 0; j < MATRIX_LEN; j++){

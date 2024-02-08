@@ -36,7 +36,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <chrono>
 #include <math.h>
-
+#include <omp.h>
 
 // XRT includes
 #include "experimental/xrt_bo.h"
@@ -157,10 +157,13 @@ for (int i = 0; i < 4; ++i) {
 ////////////////////////////////////////////////////////////////////
  auto cpu_begin = std::chrono::high_resolution_clock::now();
 
+omp_set_num_threads(16);
 
+#pragma omp parallel for
     for (int i = 0; i < DATA_SIZE; i++){
         bufReference[i] += host_bo0[i] + host_bo1[i];
     }
+
   auto cpu_end = std::chrono::high_resolution_clock::now();
   std::cout << "cpu cal finish\n";
 

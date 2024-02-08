@@ -64,7 +64,7 @@ $(XCLBIN): $(XOS)
 
 # host rules
 $(HOST_EXE): $(HOST_SRC)
-	g++ $(CXXFLAGS) -o $@ $+ $(LFLAGS)
+	g++ $(CXXFLAGS) -o $@ $+ $(LFLAGS) -fopenmp
 	@echo 'Compiled Host Executable: $(HOST_EXE)'
 
 $(EMCONFIG_FILE):

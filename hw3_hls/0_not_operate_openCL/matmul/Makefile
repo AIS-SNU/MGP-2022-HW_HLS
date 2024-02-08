@@ -86,10 +86,10 @@ endif
 
 ifeq ($(LAB),$(filter $(LAB),run1))
 $(EXECUTABLE): ./src/host/host_step1.cpp
-	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2)
+	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2) -fopenmp
 else
 $(EXECUTABLE): ./src/host/host_step2.cpp
-	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2)
+	g++ $(CXXFLAGS) -o '$@' '$<' $(CXXFLAGS2) -fopenmp
 endif
 
 
