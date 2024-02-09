@@ -143,14 +143,14 @@ for (int i = 0; i < 4; ++i) {
     }
 }
 for(int i = 0; i < 4; ++i) {
-	    for(int j=0; j<DATA_SIZE/4 ; j++){
-		           host_bo0[i*DATA_SIZE/4 + j]= bo0_map[i][j];
-			        }
+    for(int j=0; j<DATA_SIZE/4 ; j++){
+        host_bo0[i*DATA_SIZE/4 + j]= bo0_map[i][j];
+    }
 }
 for (int i = 0; i < 4; ++i) {
-	    for(int j=0; j<DATA_SIZE/4 ; j++){
-		             host_bo1[i*DATA_SIZE/4 + j]= bo1_map[i][j];
-			          }
+    for(int j=0; j<DATA_SIZE/4 ; j++){
+        host_bo1[i*DATA_SIZE/4 + j]= bo1_map[i][j];
+    }
 }
 
  std::cout << "finish allocate\n";
@@ -236,12 +236,12 @@ omp_set_num_threads(16);
 
 for (int i = 0; i < 4; ++i) {
     for(int j=0; j<DATA_SIZE/4 ; j++){
-     host_bo_out[i*DATA_SIZE/4 + j]= bo_out_map[i][j];
+        host_bo_out[i*DATA_SIZE/4 + j]= bo_out_map[i][j];
     }
 }
 
 for (int i = 0; i < 40; ++i) {
-	std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
+    std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
 }
 
    // vadd_Get_out(host_bo_out, bo_out_map ,DATA_SIZE);
