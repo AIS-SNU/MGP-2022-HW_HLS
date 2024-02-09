@@ -43,7 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "experimental/xrt_device.h"
 #include "experimental/xrt_kernel.h"
 
-#define DATA_SIZE 65536
+#define DATA_SIZE 30000
 #define MATRIX_LEN 256
 //extern "C" void DUT_Set_ARG(int *dst[4], int *src, unsigned long long num_elements);
 //extern "C" void DUT_Get_ARG(int *dst, int *src[4], unsigned long long num_elements);
@@ -96,21 +96,24 @@ int *host_bo_out=new int[DATA_SIZE];
 
 //}
 
-xrt::bo bo0[4];
-xrt::bo bo1[4];
-xrt::bo bo_out[4];
+xrt::bo bo0[15];
+xrt::bo bo1[15];
+xrt::bo bo_out[30];
 
-int* bo0_map[4];
-int* bo1_map[4];
-int* bo_out_map[4];
+int* bo0_map[15];
+int* bo1_map[15];
+int* bo_out_map[30];
 
 
-for (int i = 0; i < 4; i++) {
-    bo0[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 4, krnl.group_id(i));
+for (int i = 0; i < 15; i++) {
+    bo0[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 15, krnl.group_id(i));
     bo0_map[i] = bo0[i].template map<int*>();
-    bo1[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 4, krnl.group_id(i+4));
+    bo1[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 15, krnl.group_id(i+15));
     bo1_map[i] = bo1[i].template map<int*>();
-    bo_out[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 4, krnl.group_id(i+8));
+}
+
+for (int i = 0; i < 30; i++) {
+    bo_out[i] = xrt::bo(device, DATA_SIZE * sizeof(int) / 30, krnl.group_id(i+30));
     bo_out_map[i] = bo_out[i].template map<int*>();
 }
 
@@ -122,11 +125,14 @@ for (int i = 0; i < 4; i++) {
 
 
 
-for (int i = 0; i < 4; ++i) {	
-  std::fill(bo0_map[i], bo0_map[i] + DATA_SIZE/4, 0);
-  std::fill(bo1_map[i], bo1_map[i] + DATA_SIZE/4, 0);
-  std::fill(bo_out_map[i], bo_out_map[i] + DATA_SIZE/4, 0);
+for (int i = 0; i < 15; ++i) {	
+  std::fill(bo0_map[i], bo0_map[i] + DATA_SIZE/15, 0);
+  std::fill(bo1_map[i], bo1_map[i] + DATA_SIZE/15, 0);
 }
+for (int i = 0; i < 30; ++i) {
+  std::fill(bo_out_map[i], bo_out_map[i] + DATA_SIZE/30, 0);
+}
+
   // Create the test data
   int bufReference[DATA_SIZE];
   for (int i = 0; i < DATA_SIZE; ++i) {
@@ -134,22 +140,22 @@ for (int i = 0; i < 4; ++i) {
    // bo1_map[i] = i;
     bufReference[i] = 0;
   }
-for (int i = 0; i < 4; ++i) {
-    for(int j=0; j<DATA_SIZE/4 ; j++){
-      bo0_map[i][j] = i*DATA_SIZE/4+j;
-      bo1_map[i][j] = i*DATA_SIZE/4+j;
-      //bo0_map[i][j] =15;
-      //bo1_map[i][j] =15;
+for (int i = 0; i < 15; ++i) {
+    for(int j=0; j<DATA_SIZE/15 ; j++){
+      //bo0_map[i][j] = j;
+      //bo1_map[i][j] = j;
+      bo0_map[i][j] =15;
+      bo1_map[i][j] =15;
     }
 }
-for(int i = 0; i < 4; ++i) {
-    for(int j=0; j<DATA_SIZE/4 ; j++){
-        host_bo0[i*DATA_SIZE/4 + j]= bo0_map[i][j];
+for(int i = 0; i < 15; ++i) {
+    for(int j=0; j<DATA_SIZE/15 ; j++){
+        host_bo0[i*DATA_SIZE/15 + j]= bo0_map[i][j];
     }
 }
-for (int i = 0; i < 4; ++i) {
-    for(int j=0; j<DATA_SIZE/4 ; j++){
-        host_bo1[i*DATA_SIZE/4 + j]= bo1_map[i][j];
+for (int i = 0; i < 15; ++i) {
+    for(int j=0; j<DATA_SIZE/15 ; j++){
+        host_bo1[i*DATA_SIZE/15 + j]= bo1_map[i][j];
     }
 }
 
@@ -157,11 +163,15 @@ for (int i = 0; i < 4; ++i) {
 ////////////////////////////////////////////////////////////////////
  auto cpu_begin = std::chrono::high_resolution_clock::now();
 
-omp_set_num_threads(16);
+omp_set_num_threads(15);
 
 #pragma omp parallel for
-    for (int i = 0; i < DATA_SIZE; i++){
-        bufReference[i] += host_bo0[i] + host_bo1[i];
+    for (int i = 0; i < DATA_SIZE; i +=4 ){
+	
+       bufReference[i  ] = host_bo0[i];
+       bufReference[i+1] = host_bo0[i+1];
+       bufReference[i+2] = host_bo1[i+2];
+       bufReference[i+3] = host_bo1[i+3];
     }
 
   auto cpu_end = std::chrono::high_resolution_clock::now();
@@ -179,7 +189,7 @@ omp_set_num_threads(16);
   //////////////////////////////////////////////////////////////////////////////
   auto host_to_fpga_start = std::chrono::high_resolution_clock::now();
 
-  for (int i = 0; i < 4; i++) { 
+  for (int i = 0; i < 15; i++) { 
     // sync updated bo contents to board
     bo0[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
     bo1[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
@@ -193,7 +203,24 @@ omp_set_num_threads(16);
   std::cout << "synchronize finish\n";
   std::cout << "set argument\n";
    auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
-   auto run = krnl(bo0[0],bo0[1],bo0[2],bo0[3],bo1[0],bo1[1],bo1[2],bo1[3],bo_out[0],bo_out[1],bo_out[2],bo_out[3], DATA_SIZE);
+   auto run = krnl(bo0[0],bo0[1],bo0[2],bo0[3],
+		   bo0[4],bo0[5],bo0[6],bo0[7],
+		   bo0[8],bo0[9],bo0[10],bo0[11],
+		   bo0[12],bo0[13],bo0[14],
+
+		   bo1[0],bo1[1],bo1[2],bo1[3],
+		   bo1[4],bo1[5],bo1[6],bo1[7],
+  	 	   bo1[8],bo1[9],bo1[10],bo1[11],
+		   bo1[12],bo1[13],bo1[14],
+
+		   bo_out[0],bo_out[1],bo_out[2],bo_out[3],
+		   bo_out[4],bo_out[5],bo_out[6],bo_out[7],
+		   bo_out[8],bo_out[9],bo_out[10],bo_out[11],
+		   bo_out[12],bo_out[13],bo_out[14],bo_out[15],
+		   bo_out[16],bo_out[17],bo_out[18],bo_out[19],
+		   bo_out[20],bo_out[21],bo_out[22],bo_out[23],
+		   bo_out[24],bo_out[25],bo_out[26],bo_out[27],
+		   bo_out[28],bo_out[29]);
 
   run.wait();
   auto fpga_cal_end = std::chrono::high_resolution_clock::now();
@@ -203,7 +230,7 @@ omp_set_num_threads(16);
   
   //////////////////////////////////////////////////////////////////////////////
   auto fpga_to_host_start = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 30; i++) {
     bo_out[i].sync(XCL_BO_SYNC_BO_FROM_DEVICE);
   }
   auto fpga_to_host_end = std::chrono::high_resolution_clock::now();
@@ -234,13 +261,13 @@ omp_set_num_threads(16);
 
     auto compare_begin = std::chrono::high_resolution_clock::now();
 
-for (int i = 0; i < 4; ++i) {
-    for(int j=0; j<DATA_SIZE/4 ; j++){
-        host_bo_out[i*DATA_SIZE/4 + j]= bo_out_map[i][j];
+for (int i = 0; i < 30; ++i) {
+    for(int j=0; j<DATA_SIZE/30 ; j++){
+        host_bo_out[i*DATA_SIZE/30+j]= bo_out_map[i][j];
     }
 }
 
-for (int i = 0; i < 40; ++i) {
+for (int i = DATA_SIZE-100; i < DATA_SIZE; ++i) {
     std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
 }
 

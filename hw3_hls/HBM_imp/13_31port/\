@@ -1,0 +1,5 @@
+[connectivity]
+sp=vadd_1.in1:HBM[0:3]
+sp=vadd_1.in2:HBM[4:7] 
+sp=vadd_1.out:HBM[8:11]
+

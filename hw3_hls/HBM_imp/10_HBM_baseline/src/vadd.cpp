@@ -42,8 +42,8 @@ latency and
 used in kernel.
 *******************************************************************************/
 //#include <hls_stream.h>
-#define BUFFER_SIZE 400000
-#define DATA_SIZE 400000
+#define BUFFER_SIZE 100000
+#define DATA_SIZE 100000
 /*
     Vector Addition Kernel Implementation
     Arguments:
@@ -72,13 +72,13 @@ void vadd(const int in1[BUFFER_SIZE], // Read-Only Vector 1
 // example when multiple memory accessing arguments need access to
 // global memory simultaneously, user can create multiple master interfaces and
 // can connect to different arguments.
-#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0 //max_read_burst_length = 256
-#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 //max_read_burst_length = 256
-#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 //max_write_burst_length = 256
+#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0 max_read_burst_length = 256
+#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 max_read_burst_length = 256
+#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 max_write_burst_length = 256
 
-  int v1_buffer[DATA_SIZE];   //Local memory to store vector1
-  int v2_buffer[DATA_SIZE];   // Local memory to store vector2
-  int vout_buffer[DATA_SIZE]; // Local Memory to store result
+  int v1_buffer[DATA_SIZE] __attribute__((buffer_location("bram"))) ;   //Local memory to store v1
+  int v2_buffer[DATA_SIZE] __attribute__((buffer_location("bram")));   // Local memory to store v2
+  int vout_buffer[DATA_SIZE] __attribute__((buffer_location("bram"))); // Local Memory to store result
 
 
 
@@ -91,7 +91,7 @@ void vadd(const int in1[BUFFER_SIZE], // Read-Only Vector 1
    }
 
    for (int j = 0; j < DATA_SIZE ; j +=1 ) {
-       vout_buffer[j] = v1_buffer[j]+v2_buffer[j];
+       vout_buffer[j] = v1_buffer[j];
    }
 
    for (int j = 0; j < DATA_SIZE ; j += 1) {
