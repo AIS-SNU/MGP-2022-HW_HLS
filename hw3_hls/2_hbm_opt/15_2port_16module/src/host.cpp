@@ -43,7 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "experimental/xrt_device.h"
 #include "experimental/xrt_kernel.h"
 
-#define DATA_SIZE 1024*1024*64
+#define DATA_SIZE 65536/16
 #define NUM_KERNEL 4
 #define NUM_TIMES 1024
 //extern "C" void DUT_Set_ARG(int *dst[4], int *src, unsigned long long num_elements);
@@ -97,26 +97,79 @@ int *host_bo_out=new int[4*DATA_SIZE];
 
 //}
 
-xrt::bo bo0[4];
-xrt::bo bo1[4];
-xrt::bo bo_out[4];
+xrt::bo bo00;
+xrt::bo bo01;
+xrt::bo bo02;
+xrt::bo bo03;
 
-int* bo0_map[4];
-int* bo1_map[4];
-int* bo_out_map[4];
+xrt::bo bo10;
+xrt::bo bo11;
+xrt::bo bo12;
+xrt::bo bo13;
+
+xrt::bo bo_out0;
+xrt::bo bo_out1;
+xrt::bo bo_out2;
+xrt::bo bo_out3;
 
 
-for (int i = 0; i < 4; i++) {
-    bo0[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i));
-    bo0_map[i] = bo0[i].template map<int*>();
-    bo1[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i+4));
-    bo1_map[i] = bo1[i].template map<int*>();
-}
+int* bo00_map;
+int* bo01_map;
+int* bo02_map;
+int* bo03_map;
 
-for (int i = 0; i < 4; i++) {
-    bo_out[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i+8));
-    bo_out_map[i] = bo_out[i].template map<int*>();
-}
+int* bo10_map;
+int* bo11_map;
+int* bo12_map;
+int* bo13_map;
+
+int* bo_out_map0;
+int* bo_out_map1;
+int* bo_out_map2;
+int* bo_out_map3;
+
+
+std::cout << "finaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaish bo allocate\n";
+
+//for (int i = 0; i < 4; i++) {
+    bo00 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(0));
+    bo00_map = bo00.template map<int*>();
+    bo10 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(1));
+    bo10_map = bo10.template map<int*>();
+    
+    bo01 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(2));
+    bo01_map = bo01.template map<int*>();
+    bo11 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(3));
+    bo11_map = bo11.template map<int*>();
+    
+    bo02 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(4));
+    bo02_map = bo02.template map<int*>();
+    bo12 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(5));
+    bo12_map = bo12.template map<int*>();
+
+    bo03 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(6));
+    bo03_map = bo03.template map<int*>();
+    bo13 = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(7));
+    bo13_map = bo13.template map<int*>();
+
+
+//}
+
+std::cout << "finaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaish bo allocate\n";
+
+
+//for (int ii = 0; ii < 4; ii++) {
+   
+    bo_out0= xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(8));
+    bo_out_map0 = bo_out0.template map<int*>();
+    bo_out1= xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(9));
+    bo_out_map1 = bo_out1.template map<int*>();
+    bo_out2= xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(10));
+    bo_out_map2 = bo_out2.template map<int*>();
+    bo_out3= xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(11));
+    bo_out_map3 = bo_out3.template map<int*>();
+
+//}
 
 // Map the contents of the buffer object into host memory
 //  auto bo0_map = bo0.map<int *>();
@@ -124,15 +177,17 @@ for (int i = 0; i < 4; i++) {
 //  auto bo_out_map = bo_out.map<int *>();
 
 
+std::cout << "finish bo allocate\n";
+////////////////////////////////////////////////////////////////////
+//
 
-
-for (int i = 0; i < 4; ++i) {	
-  std::fill(bo0_map[i], bo0_map[i] + DATA_SIZE, 0);
-  std::fill(bo1_map[i], bo1_map[i] + DATA_SIZE, 0);
-}
-for (int i = 0; i < 4; ++i) {
-  std::fill(bo_out_map[i], bo_out_map[i] + DATA_SIZE, 0);
-}
+//for (int i = 0; i < 4; ++i) {	
+//  std::fill(bo0_map[i], bo0_map[i] + DATA_SIZE, 0);
+//  std::fill(bo1_map[i], bo1_map[i] + DATA_SIZE, 0);
+//}i
+//for (int i = 0; i < 4; ++i) {
+//  std::fill(bo_out_map[i], bo_out_map[i] + DATA_SIZE, 0);
+//}
 
   // Create the test data
   int bufReference[DATA_SIZE];
@@ -141,24 +196,40 @@ for (int i = 0; i < 4; ++i) {
    // bo1_map[i] = i;
     bufReference[i] = 0;
   }
-for (int i = 0; i < 4; ++i) {
+//for (int i = 0; i < 4; ++i) {
     for(int j=0; j<DATA_SIZE ; j++){
       //bo0_map[i][j] = j;
       //bo1_map[i][j] = j;
-      bo0_map[i][j] =j;
-      bo1_map[i][j] =j;
+      bo00_map[j] =j;
+      bo10_map[j] =j;
+      bo01_map[j] =j;
+      bo11_map[j] =j;
+      bo02_map[j] =j;
+      bo12_map[j] =j;
+      bo03_map[j] =j;
+      bo13_map[j] =j;
+
     }
-}
-for(int i = 0; i < 4; ++i) {
+
+//}
+//for(int i = 0; i < 4; ++i) {
     for(int j=0; j<DATA_SIZE ; j++){
-        host_bo0[i*DATA_SIZE + j]= bo0_map[i][j];
+        host_bo0[0*DATA_SIZE + j]= bo00_map[j];
+	host_bo0[1*DATA_SIZE + j]= bo01_map[j];
+	host_bo0[2*DATA_SIZE + j]= bo02_map[j];
+	host_bo0[3*DATA_SIZE + j]= bo03_map[j];
+
     }
-}
-for (int i = 0; i < 4; ++i) {
+//}
+//for (int i = 0; i < 4; ++i) {
     for(int j=0; j<DATA_SIZE ; j++){
-        host_bo1[i*DATA_SIZE + j]= bo1_map[i][j];
+        host_bo1[0*DATA_SIZE + j]= bo10_map[j];
+	host_bo1[1*DATA_SIZE + j]= bo11_map[j];
+	host_bo1[2*DATA_SIZE + j]= bo12_map[j];
+	host_bo1[3*DATA_SIZE + j]= bo13_map[j];
+
     }
-}
+//}
 
  std::cout << "finish allocate\n";
 ////////////////////////////////////////////////////////////////////
@@ -186,11 +257,18 @@ omp_set_num_threads(16);
   //////////////////////////////////////////////////////////////////////////////
   auto host_to_fpga_start = std::chrono::high_resolution_clock::now();
 
-  for (int i = 0; i < 4; i++) { 
+//  for (int i = 0; i < 4; i++) { 
     // sync updated bo contents to board
-    bo0[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    bo1[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
-  }
+    bo00.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo10.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo01.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo11.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo02.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo12.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo03.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+    bo13.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+
+ // }
   
   auto host_to_fpga_end = std::chrono::high_resolution_clock::now();
   /////////////////////////////////////////////////////////////////////////////
@@ -198,10 +276,10 @@ omp_set_num_threads(16);
   std::cout << "set argument\n";
    auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
   //for (int i = 0; i < NUM_KERNEL; i++) {
-        auto run1 = krnl(bo0[0],bo1[0],bo_out[0],NUM_TIMES);
-        auto run2 = krnl(bo0[1],bo1[1],bo_out[1],NUM_TIMES);
-	auto run3 = krnl(bo0[2],bo1[2],bo_out[2],NUM_TIMES);
-	auto run4 = krnl(bo0[3],bo1[3],bo_out[3],NUM_TIMES);
+        auto run1 = krnl(bo00,bo10,bo_out0,NUM_TIMES);
+        auto run2 = krnl(bo01,bo11,bo_out1,NUM_TIMES);
+	auto run3 = krnl(bo02,bo12,bo_out2,NUM_TIMES);
+	auto run4 = krnl(bo03,bo13,bo_out3,NUM_TIMES);
 
          run1.wait();
          run2.wait();
@@ -218,9 +296,12 @@ omp_set_num_threads(16);
   
   //////////////////////////////////////////////////////////////////////////////
   auto fpga_to_host_start = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 4; i++) {
-    bo_out[i].sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-  }
+//  for (int i = 0; i < 4; i++) {
+    bo_out0.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out1.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out2.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+    bo_out3.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+//  }
   auto fpga_to_host_end = std::chrono::high_resolution_clock::now();
   /////////////////////////////////////////////////////////////////////////////
 
@@ -249,11 +330,11 @@ omp_set_num_threads(16);
 
     auto compare_begin = std::chrono::high_resolution_clock::now();
 
-for (int i = 0; i < 4; ++i) {
+//for (int i = 0; i < 4; ++i) {
     for(int j=0; j<DATA_SIZE ; j++){
-        host_bo_out[i*DATA_SIZE+j]= bo_out_map[i][j];
+        host_bo_out[0*DATA_SIZE+j]= bo_out_map0[j];
     }
-}
+//}
 
 for (int i = DATA_SIZE-100; i < DATA_SIZE; ++i) {
     std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;

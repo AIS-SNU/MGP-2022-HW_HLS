@@ -42,8 +42,8 @@ latency and
 used in kernel.
 *******************************************************************************/
 //#include <hls_stream.h>
-#define BUFFER_SIZE 1024*1024*64
-#define DATA_SIZE 1024*1024*64
+#define BUFFER_SIZE 1024*64
+#define DATA_SIZE 1024*64
 /*
     Vector Addition Kernel Implementation
     Arguments:
@@ -72,9 +72,9 @@ void vadd(const int *in1, // Read-Only Vector 1
 // example when multiple memory accessing arguments need access to
 // global memory simultaneously, user can create multiple master interfaces and
 // can connect to different arguments.
-#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0
-#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1
-#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2
+#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0 depth=DATA_SIZE
+#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 depth=DATA_SIZE
+#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 depth=DATA_SIZE
 
 #pragma HLS INTERFACE s_axilite port = in1
 #pragma HLS INTERFACE s_axilite port = in2
