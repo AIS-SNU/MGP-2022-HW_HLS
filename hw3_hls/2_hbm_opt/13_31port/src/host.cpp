@@ -268,7 +268,7 @@ for (int i = 0; i < 30; ++i) {
 }
 
 for (int i = DATA_SIZE-100; i < DATA_SIZE; ++i) {
-    std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
+//    std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
 }
 
    // vadd_Get_out(host_bo_out, bo_out_map ,DATA_SIZE);

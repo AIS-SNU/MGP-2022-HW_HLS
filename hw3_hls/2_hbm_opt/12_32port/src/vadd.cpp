@@ -103,7 +103,7 @@ void vadd(const int in1_0[DATA_SIZE/16],// Read-Only Vector 1
 #pragma HLS INTERFACE m_axi port = in2_12 offset = slave bundle = gmem28  depth=DATA_SIZE/16 num_read_outstanding=32
 #pragma HLS INTERFACE m_axi port = in2_13 offset = slave bundle = gmem29  depth=DATA_SIZE/16 num_read_outstanding=32
 #pragma HLS INTERFACE m_axi port = in2_14 offset = slave bundle = gmem30  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_15 offset = slave bundle = gmem31  depth=DATA_SIZE/16 num_read_outstanding=32
+#pragma HLS INTERFACE m_axi port = in2_15 offset = slave bundle = gmem30  depth=DATA_SIZE/16 num_read_outstanding=32
 
 #pragma HLS INTERFACE m_axi port = out_0 offset = slave bundle = gmem0  depth=DATA_SIZE/32 num_write_outstanding=32
 #pragma HLS INTERFACE m_axi port = out_1 offset = slave bundle = gmem1  depth=DATA_SIZE/32 num_write_outstanding=32
@@ -136,7 +136,7 @@ void vadd(const int in1_0[DATA_SIZE/16],// Read-Only Vector 1
 #pragma HLS INTERFACE m_axi port = out_28 offset = slave bundle = gmem28  depth=DATA_SIZE/32 num_write_outstanding=32
 #pragma HLS INTERFACE m_axi port = out_29 offset = slave bundle = gmem29  depth=DATA_SIZE/32 num_write_outstanding=32
 #pragma HLS INTERFACE m_axi port = out_30 offset = slave bundle = gmem30  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_31 offset = slave bundle = gmem31  depth=DATA_SIZE/32 num_write_outstanding=32
+#pragma HLS INTERFACE m_axi port = out_31 offset = slave bundle = gmem30  depth=DATA_SIZE/32 num_write_outstanding=32
 		  
 		  
 		  
