@@ -22,7 +22,14 @@ multiplication
 
 *******************************************************************************/
 
-#include "krnl_vaddmul.h"
+//#include "krnl_vaddmul.h"
+
+#define VDATA_SIZE 16
+
+// TRIPCOUNT indentifier
+const unsigned int c_dt_size = VDATA_SIZE;
+
+typedef struct v_datatype { unsigned int data[VDATA_SIZE]; } v_dt;
 
 extern "C" {
 void krnl_vaddmul(const v_dt* in1,             // Read-Only Vector 1

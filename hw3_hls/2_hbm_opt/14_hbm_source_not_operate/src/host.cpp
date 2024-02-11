@@ -34,7 +34,11 @@
 #include <string.h>
 #include <vector>
 
-#include "xcl2.hpp"
+#include "experimental/xrt_bo.h"
+#include "experimental/xrt_device.h"
+#include "experimental/xrt_kernel.h"
+
+#include "/home/kdg6245/MGP-2022-HW_HLS/hw3_hls/2_hbm_opt/hbm_bandwidth/src/xcl2.hpp"
 
 #define NUM_KERNEL 3
 
