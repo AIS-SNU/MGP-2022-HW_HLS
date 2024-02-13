@@ -42,8 +42,11 @@ latency and
 used in kernel.
 *******************************************************************************/
 //#include <hls_stream.h>
-#define BUFFER_SIZE 100000
-#define DATA_SIZE 100000
+
+#define DATA_SIZE 32*16
+
+#define VEC_SIZE 16
+
 /*
     Vector Addition Kernel Implementation
     Arguments:
@@ -53,9 +56,10 @@ used in kernel.
         size  (input)     --> Size of Vector in Integer
    */
 extern "C" {
-void vadd(const int in1[BUFFER_SIZE], // Read-Only Vector 1
-          const int in2[BUFFER_SIZE], // Read-Only Vector 2
-          int out[BUFFER_SIZE],       // Output Result
+void vadd(
+	  const int* in1, // Read-Only Vector 1
+          const int* in2, // Read-Only Vector 2
+          int *out,       // Output Result
           int size                 // Size in integer
           ) {
 // SDAccel kernel must have one and only one s_axilite interface which will be
@@ -76,26 +80,51 @@ void vadd(const int in1[BUFFER_SIZE], // Read-Only Vector 1
 #pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 max_read_burst_length = 256
 #pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 max_write_burst_length = 256
 
-  int v1_buffer[DATA_SIZE] __attribute__((buffer_location("bram"))) ;   //Local memory to store v1
-  int v2_buffer[DATA_SIZE] __attribute__((buffer_location("bram")));   // Local memory to store v2
-  int vout_buffer[DATA_SIZE] __attribute__((buffer_location("bram"))); // Local Memory to store result
+   int v1_buffer[DATA_SIZE];   //Local memory to store v1
+   int v2_buffer[DATA_SIZE];   // Local memory to store v2
+   int vout_buffer[DATA_SIZE]; // Local Memory to store result
 
+   #pragma HLS array_partition variable=v1_buffer factor=16 type=cyclic
+   #pragma HLS array_partition variable=v2_buffer factor=16 type=cyclic
+   #pragma HLS array_partition variable=vout_buffer factor=16 type=cyclic
 
+   int n_size = size;
+   name1: for (int i =0; i < n_size; i += DATA_SIZE){
+	    name2: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
+	       #pragma HLS PIPELINE II=1
+		for (int k =0; k < VEC_SIZE; k++)
+		{
+			#pragma HLS UNROLL
+		    v1_buffer[j + k] = in1[i + j + k];
+		}
+	   }
 
-   for (int j = 0; j < DATA_SIZE ; j += 1) {
-       v1_buffer[j  ] = in1[j];
-   }
+		name3: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
+			#pragma HLS PIPELINE II=1
+         for (int k =0; k < VEC_SIZE; k++)
+         {
+             #pragma HLS UNROLL
+             v2_buffer[j + k] = in2[i + j + k];
+         }
+        }
 
-   for (int j = 0; j < DATA_SIZE ; j += 1) {
-       v2_buffer[j  ] = in2[j];
-   }
+        name4: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
+            #pragma HLS PIPELINE II=1
+         for (int k =0; k < VEC_SIZE; k++)
+         {
+             #pragma HLS UNROLL
+             vout_buffer[j + k] = v1_buffer[j + k] + v2_buffer[j + k];
+         }
+        }
 
-   for (int j = 0; j < DATA_SIZE ; j +=1 ) {
-       vout_buffer[j] = v1_buffer[j];
-   }
-
-   for (int j = 0; j < DATA_SIZE ; j += 1) {
-       out[j] = vout_buffer[j  ];
-   }  
-}
+	    name6: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
+			#pragma HLS PIPELINE II=1
+			for(int k=0; k< VEC_SIZE; k++)
+			{
+				#pragma HLS UNROLL
+				out[i+j+k] = vout_buffer[j+k ];
+			}
+		}  
+	   }
+ }
 }

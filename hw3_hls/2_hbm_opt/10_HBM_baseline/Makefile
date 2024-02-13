@@ -1,6 +1,6 @@
 VPP := $(XILINX_VITIS)/bin/v++
 EMCONFIGUTIL := $(XILINX_VITIS)/bin/emconfigutil
-TARGET := hw_emu
+TARGET := hw
 LAB := run2
 PLATFORM ?= xilinx_u50_gen3x16_xdma_5_202210_1
 

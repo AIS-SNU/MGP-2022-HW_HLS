@@ -43,7 +43,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "experimental/xrt_device.h"
 #include "experimental/xrt_kernel.h"
 
-#define DATA_SIZE 100000
+#define DATA_SIZE 256*256
 //#define MATRIX_LEN 512
 int main(int argc, char **argv) {
   std::string xclbin_file_name = argv[1];
@@ -90,7 +90,7 @@ std::cout << "CPU cal START\n";
 omp_set_num_threads(4);  
 #pragma omp parallel for 
     for (int i = 0; i < DATA_SIZE; i++){
-        bufReference[i] = bo0_map[i];
+        bufReference[i] = bo0_map[i]+bo1_map[i];
     }
   auto cpu_end = std::chrono::high_resolution_clock::now();
 
@@ -114,7 +114,7 @@ omp_set_num_threads(4);
 std::cout << "synchronize finish" << std::endl;
 
   auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
-  auto run = krnl(bo0, bo1, bo_out, DATA_SIZE);
+  auto run = krnl(bo0, bo1, bo_out, 256*256);
   run.wait();
   auto fpga_cal_end = std::chrono::high_resolution_clock::now();
 
@@ -161,6 +161,10 @@ std::cout << "synchronize finish" << std::endl;
 
     std::chrono::duration<double> compare_duration = compare_end - compare_begin;
   std::cout << "Compare Time:                 " << compare_duration.count() << " s" << std::endl;
+
+  for (int i = 32*16-50; i < 32*16+50; ++i) {
+    std::cout << "module:  " << bo_out_map[i] << ", refer:  " << bufReference[i] << std::endl;
+}
 
 
 
