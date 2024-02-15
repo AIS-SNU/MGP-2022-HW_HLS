@@ -21,8 +21,12 @@ int main(int argc, char **argv) {
     bufReference[i] = 0;
     bufReference_opt[i]=0;
   }
-std::cout << "CPU start" << std::endl;
 
+int bo0_buffer[DATA_SIZE];
+int bo1_buffer[DATA_SIZE];
+
+std::cout << "CPU start" << std::endl;
+//#pragma omp parallel for num_threads(16)
   auto cpu_begin = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < MATRIX_LEN; i++){

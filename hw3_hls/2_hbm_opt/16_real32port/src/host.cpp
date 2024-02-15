@@ -45,6 +45,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DATA_SIZE 512
 #define ALL_DATA 4096
+#define ITERATION 128
 //extern "C" void DUT_Set_ARG(int *dst[4], int *src, unsigned long long num_elements);
 //extern "C" void DUT_Get_ARG(int *dst, int *src[4], unsigned long long num_elements);
 
@@ -82,19 +83,19 @@ int main(int argc, char **argv) {
 //  auto bo0 = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
 //  auto bo1 = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
 //  auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
-//
-//
+
+
 
 int *host_bo0=new int[DATA_SIZE*8];
 int *host_bo1=new int[DATA_SIZE*8];
 int *host_bo_out=new int[DATA_SIZE*16];
 
-//for (size_t i = 0; i < DATA_SIZE; ++i) {
-   // host_bo0[i] = i;
-   // host_bo1[i] = i;
-   // host_bo_out[i] = 0;
+for (size_t i = 0; i < DATA_SIZE; ++i) {
+    host_bo0[i] = i;
+    host_bo1[i] = i;
+    host_bo_out[i] = 0;
 
-//}
+}
 
 xrt::bo bo0[8];
 xrt::bo bo1[8];
@@ -150,6 +151,7 @@ for (int i = 0; i < 8; ++i) {
       bo1_map[i][j] =i+j;
     }
 }
+
 for(int i = 0; i < 8; ++i) {
     for(int j=0; j<DATA_SIZE ; j++){
         host_bo0[i*DATA_SIZE + j]= bo0_map[i][j];
@@ -204,20 +206,28 @@ omp_set_num_threads(16);
   /////////////////////////////////////////////////////////////////////////////
   std::cout << "synchronize finish\n";
   std::cout << "set argument\n";
-   auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
-   auto run = krnl(bo0[0],bo0[1],bo0[2],bo0[3],
-		   bo0[4],bo0[5],bo0[6],bo0[7],
+//   auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
+//   auto run = krnl(bo0[0],bo0[1],bo0[2],bo0[3],
+//		   bo0[4],bo0[5],bo0[6],bo0[7],
+//
+//		   bo1[0],bo1[1],bo1[2],bo1[3],
+//		   bo1[4],bo1[5],bo1[6],bo1[7],
+//
+//		   bo_out[0],bo_out[1],bo_out[2],bo_out[3],
+//		   bo_out[4],bo_out[5],bo_out[6],bo_out[7],
+//		   bo_out[8],bo_out[9],bo_out[10],bo_out[11],
+//		   bo_out[12],bo_out[13],bo_out[14],bo_out[15],
+//		   ALL_DATA
+//		   );
+ auto run = xrt::run(krnl);
+ for(int i=0;i<8;i++){run.set_arg(i,bo0[i]);}
+ for(int i=8;i<16;i++){run.set_arg(i,bo1[i-8]);}
+ for(int i=16;i<32;i++){run.set_arg(i,bo_out[i-16]);}
+run.set_arg(32,ALL_DATA*16);
+run.set_arg(33,ITERATION);
 
-		   bo1[0],bo1[1],bo1[2],bo1[3],
-		   bo1[4],bo1[5],bo1[6],bo1[7],
-
-		   bo_out[0],bo_out[1],bo_out[2],bo_out[3],
-		   bo_out[4],bo_out[5],bo_out[6],bo_out[7],
-		   bo_out[8],bo_out[9],bo_out[10],bo_out[11],
-		   bo_out[12],bo_out[13],bo_out[14],bo_out[15],
-		   DATA_SIZE
-		   );
-
+  auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
+  run.start();
   run.wait();
   auto fpga_cal_end = std::chrono::high_resolution_clock::now();
 
@@ -248,10 +258,10 @@ omp_set_num_threads(16);
   std::chrono::duration<double> fpga_duration = fpga_end - fpga_begin;
   std::cout << "FPGA Time:                    " << fpga_duration.count() << " s" << std::endl;
 
-  std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
-  std::cout << "CPU Time:                     " << cpu_duration.count() << " s" << std::endl;
+//  std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
+//  std::cout << "CPU Time:                     " << cpu_duration.count() << " s" << std::endl;
 
-  std::cout << "FPGA Speedup:                 " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
+ // std::cout << "FPGA Speedup:                 " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
 
 
 

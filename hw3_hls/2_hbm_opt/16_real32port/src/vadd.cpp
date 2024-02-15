@@ -91,7 +91,8 @@ void vadd(
       int* out_13,
       int* out_14,
       int* out_15,
-      int size                 // Size in integer
+      int size,                 // Size in integer
+	  int iter  
           ) {
 // SDAccel kernel must have one and only one s_axilite interface which will be
 // used by host application to configure the kernel.
@@ -160,10 +161,13 @@ void vadd(
    #pragma HLS array_partition variable=v1_buffer factor=16 type=cyclic dim=1
 
    int n_size = size;
+   int iteration = iter;
+name0: for(int a=0; a<iteration; a ++){
    name1: for (int i =0; i < n_size; i += DATA_SIZE*VEC_SIZE){
+//	    #pragma HLS PIPELINE
 	    name2: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
 	       #pragma HLS PIPELINE II=1
-		for (int k =0; k < VEC_SIZE; k++)
+		v1v2input:for (int k =0; k < VEC_SIZE; k++)
 		{
 			#pragma HLS UNROLL
 		    v1_buffer[0][j + k] = in1_0[i + j + k];
@@ -174,15 +178,7 @@ void vadd(
 			v1_buffer[5][j + k] = in1_5[i + j + k];
 			v1_buffer[6][j + k] = in1_6[i + j + k];
 			v1_buffer[7][j + k] = in1_7[i + j + k];
-		}
-	   }
-
-		name3: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
-			#pragma HLS PIPELINE II=1
-         for (int k =0; k < VEC_SIZE; k++)
-         {
-             #pragma HLS UNROLL
-            v2_buffer[0][j + k] = in2_0[i + j + k];
+			v2_buffer[0][j + k] = in2_0[i + j + k];
             v2_buffer[1][j + k] = in2_1[i + j + k];
             v2_buffer[2][j + k] = in2_2[i + j + k];
             v2_buffer[3][j + k] = in2_3[i + j + k];
@@ -190,58 +186,30 @@ void vadd(
             v2_buffer[5][j + k] = in2_5[i + j + k];
             v2_buffer[6][j + k] = in2_6[i + j + k];
             v2_buffer[7][j + k] = in2_7[i + j + k];
-
-         }
-        }
-
-        name4: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
-            #pragma HLS PIPELINE II=1
-         for (int k =0; k < VEC_SIZE; k++)
-         {
+		}
+        output_compute:for (int k =0; k < VEC_SIZE; k++)
+        {
              #pragma HLS UNROLL
-             vout_buffer[0][j + k] = v1_buffer[0][j + k] + v2_buffer[0][j + k];
-			 vout_buffer[1][j + k] = v1_buffer[1][j + k] + v2_buffer[1][j + k];
-			 vout_buffer[2][j + k] = v1_buffer[2][j + k] + v2_buffer[2][j + k];
-			 vout_buffer[3][j + k] = v1_buffer[3][j + k] + v2_buffer[3][j + k];
-			 vout_buffer[4][j + k] = v1_buffer[4][j + k] + v2_buffer[4][j + k];
-			 vout_buffer[5][j + k] = v1_buffer[5][j + k] + v2_buffer[5][j + k];
-			 vout_buffer[6][j + k] = v1_buffer[6][j + k] + v2_buffer[6][j + k];
-			 vout_buffer[7][j + k] = v1_buffer[7][j + k] + v2_buffer[7][j + k];
-			 vout_buffer[8][j + k] = v1_buffer[0][j + k] - v2_buffer[0][j + k];
-			 vout_buffer[9][j + k] = v1_buffer[1][j + k] - v2_buffer[1][j + k];
-			 vout_buffer[10][j + k] = v1_buffer[2][j + k] - v2_buffer[2][j + k];
-			 vout_buffer[11][j + k] = v1_buffer[3][j + k] - v2_buffer[3][j + k];
-			 vout_buffer[12][j + k] = v1_buffer[4][j + k] - v2_buffer[4][j + k];
-			 vout_buffer[13][j + k] = v1_buffer[5][j + k] - v2_buffer[5][j + k];
-			 vout_buffer[14][j + k] = v1_buffer[6][j + k] - v2_buffer[6][j + k];
-			 vout_buffer[15][j + k] = v1_buffer[7][j + k] - v2_buffer[7][j + k];
-         }
+			out_0[i+j+k]= v1_buffer[0][j + k] + v2_buffer[0][j + k];
+			out_1[i+j+k]= v1_buffer[1][j + k] + v2_buffer[1][j + k];
+			out_2[i+j+k]= v1_buffer[2][j + k] + v2_buffer[2][j + k];
+			out_3[i+j+k]= v1_buffer[3][j + k] + v2_buffer[3][j + k];
+			out_4[i+j+k]= v1_buffer[4][j + k] + v2_buffer[4][j + k];
+			out_5[i+j+k]= v1_buffer[5][j + k] + v2_buffer[5][j + k];
+			out_6[i+j+k]= v1_buffer[6][j + k] + v2_buffer[6][j + k];
+			out_7[i+j+k]= v1_buffer[7][j + k] + v2_buffer[7][j + k];
+			out_8[i+j+k]= v1_buffer[0][j + k] - v2_buffer[0][j + k];
+			out_9[i+j+k]= v1_buffer[1][j + k] - v2_buffer[1][j + k];
+			out_10[i+j+k] = v1_buffer[2][j + k] - v2_buffer[2][j + k];
+			out_11[i+j+k] = v1_buffer[3][j + k] - v2_buffer[3][j + k];
+			out_12[i+j+k] = v1_buffer[4][j + k] - v2_buffer[4][j + k];
+			out_13[i+j+k] = v1_buffer[5][j + k] - v2_buffer[5][j + k];
+			out_14[i+j+k] = v1_buffer[6][j + k] - v2_buffer[6][j + k];
+			out_15[i+j+k] = v1_buffer[7][j + k] - v2_buffer[7][j + k];
         }
 
-	    name6: for (int j = 0; j < DATA_SIZE ; j += VEC_SIZE) {
-			#pragma HLS PIPELINE II=1
-			for(int k=0; k< VEC_SIZE; k++)
-			{
-				#pragma HLS UNROLL
-		       out_0[i+j+k] = vout_buffer[0][j+k];
-		       out_1[i+j+k] = vout_buffer[1][j+k];
-			   out_2[i+j+k] = vout_buffer[2][j+k];
-		       out_3[i+j+k] = vout_buffer[3][j+k];
-		       out_4[i+j+k] = vout_buffer[4][j+k];
-		       out_5[i+j+k] = vout_buffer[5][j+k];
-		       out_6[i+j+k] = vout_buffer[6][j+k];
-		       out_7[i+j+k] = vout_buffer[7][j+k];
-		       out_8[i+j+k] = vout_buffer[8][j+k];
-			   out_9[i+j+k] = vout_buffer[9][j+k];
-			   out_10[i+j+k] = vout_buffer[10][j+k];
-			   out_11[i+j+k] = vout_buffer[11][j+k];
-		       out_12[i+j+k] = vout_buffer[12][j+k];
-			   out_13[i+j+k] = vout_buffer[13][j+k];
-			   out_14[i+j+k] = vout_buffer[14][j+k];
-			   out_15[i+j+k] = vout_buffer[15][j+k];
-
-			}
-		}  
-	   }
+	}  
+  }
+}
  }
 }
