@@ -44,7 +44,7 @@ used in kernel.
 #include <iostream>
 
 #define TILE_SIZE 256
-#define multi_thread 4
+#define multi_thread 1
 extern "C" {
 void vadd(const int *in1,  // Read-Only Vector 1
           const int *in2,  // Read-Only Vector 2
@@ -62,54 +62,48 @@ int rows = BUFFER_SIZE;
 int inners = BUFFER_SIZE;
 int columns = BUFFER_SIZE;
 
-int vout_buffer[multi_thread*TILE_SIZE][multi_thread*TILE_SIZE];
-#pragma HLS array_partition variable=vout_buffer dim=2 factor=16 cyclic
+int vout_buffer[TILE_SIZE][TILE_SIZE];
+
 #pragma HLS array_partition variable=vout_buffer dim=1 factor=16 cyclic
+#pragma HLS array_partition variable=vout_buffer dim=2 factor=16 cyclic
+
 //burst write
 //init vout_buffer
-   
-int left[multi_thread*TILE_SIZE][TILE_SIZE];
-int right[TILE_SIZE][TILE_SIZE*multi_thread];
-int vout_buffer_local[16][16];
-#pragma HLS array_partition variable=left dim=1 factor=16 cyclic
+int left[TILE_SIZE][TILE_SIZE];
+int right[TILE_SIZE][TILE_SIZE];
+//#pragma HLS array_partition variable=left dim=1 factor=16 cyclic
+//#pragma HLS array_partition variable=right dim=1 factor=16 cyclic
 #pragma HLS array_partition variable=left dim=2 factor=16 cyclic
 #pragma HLS array_partition variable=right dim=2 factor=16 cyclic
-#pragma HLS array_partition variable=vout_buffer_local dim=1 factor=16 cyclic
-#pragma HLS array_partition variable=vout_buffer_local dim=2 factor=16 cyclic
 
-
-  for (int rowTile = 0; rowTile < rows; rowTile += multi_thread*TILE_SIZE) {
-    for (int columnTile = 0; columnTile < columns; columnTile += multi_thread*TILE_SIZE) {
+  for (int rowTile = 0; rowTile < rows; rowTile += TILE_SIZE) {
+    for (int columnTile = 0; columnTile < columns; columnTile += TILE_SIZE) {
 
 /////////////////////////////////reset vout
-	 for (int i = 0; i < multi_thread* TILE_SIZE ; i ++) {
-      for (int j = 0; j < multi_thread* TILE_SIZE ; j+=16) {
+	 for (int i = 0; i < TILE_SIZE ; i ++) {
+      for (int j = 0; j < TILE_SIZE ; j+=16) {
       #pragma HLS pipeline II=1
         for (int k = 0; k < 16 ; k ++) {
         #pragma HLS unroll
-            vout_buffer[i][j+k] = 0;
+          vout_buffer[i][j+k] = 0;
         }
       }
      }
 
 /////////////////////////////////one tile start/////////////////////////////////////////////////////
       for (int innerTile = 0; innerTile < inners; innerTile += TILE_SIZE) {
-//  	#pragma HLS pipeline II=1
-		int innerTileEnd = std::min(inners, innerTile + TILE_SIZE);
-        int rowTileEnd = std::min(rows, rowTile + multi_thread*TILE_SIZE);
-		int columnTileEnd = std::min(columns, columnTile + multi_thread*TILE_SIZE);
-        
-		//data import
-		for (int row = rowTile; row < rowTileEnd; row++) {
-          for (int inner = innerTile; inner <  innerTileEnd; inner +=16) {
+//  	  #pragma HLS pipeline II=1
+        //data import
+		for (int row = rowTile; row < rowTile + TILE_SIZE; row++) {
+          for (int inner = innerTile; inner <  innerTile + TILE_SIZE; inner += 16) {
 		  	for (int k = 0; k < 16 ; k ++) {
                #pragma HLS unroll
                left[row-rowTile][inner-innerTile + k]= in1[row * inners + inner+k];
             }
 		  }
 		}
-		for (int inner = innerTile; inner <  innerTileEnd; inner++) { 
-          for (int col = columnTile; col < columnTileEnd; col += 16) {
+		for (int inner = innerTile; inner <  innerTile + TILE_SIZE; inner++) { 
+          for (int col = columnTile; col < columnTile + TILE_SIZE; col += 16) {
 		    for (int k = 0; k < 16 ; k ++) {
               #pragma HLS unroll
               right[inner-innerTile][col-columnTile + k]= in2[inner * columns + col + k];
@@ -119,32 +113,19 @@ int vout_buffer_local[16][16];
         
 
         //calculate
-        for (int row = rowTile; row < rowTileEnd; row += 16 ) {
-          for (int inner = innerTile; inner < innerTileEnd; inner++) {
-   			#pragma HLS pipeline ii = 1 rewind
-            for (int col = columnTile; col < columnTileEnd; col += 16) {
-			  #pragma HLS unroll
-			  for(int ii=0; ii < 16; ii++){
-                for(int jj=0; jj < 16; jj++){
-                  vout_buffer_local[ii][jj] =  left[row-rowTile+ii][inner-innerTile] * right[inner-innerTile][col-columnTile+jj];
-                  }
-                }
-			   for(int ii=0; ii < 16; ii++){
-                 for(int jj=0; jj < 16; jj++){
-				   vout_buffer[row-rowTile+ii][col-columnTile+jj] += vout_buffer_local[ii][jj];
-				 }
-			   }
-
+        for (int row = rowTile; row < rowTile + TILE_SIZE; row++) {
+          for (int inner = innerTile; inner < innerTile + TILE_SIZE; inner++) {
+            for (int col = columnTile; col < columnTile + TILE_SIZE; col++) {
+              #pragma HLS unroll
+              vout_buffer[row-rowTile][col-columnTile] += left[row-rowTile][inner-innerTile] * right[inner-innerTile][col-columnTile];
             }
           }
         }
 
-
-
       }
 /////////////////////////////////one tile finish/////////////////////////////////////////////////////
-	for(int j = 0; j< multi_thread*TILE_SIZE ; j ++ ){
-        for (int i = 0; i< multi_thread*TILE_SIZE ; i += 16 ) {
+	for(int j = 0; j< TILE_SIZE ; j ++ ){
+        for (int i = 0; i< TILE_SIZE ; i += 16 ) {
 		#pragma HLS pipeline II=1
 			for (int k = 0; k < 16 ; k ++) {
 			#pragma HLS unroll

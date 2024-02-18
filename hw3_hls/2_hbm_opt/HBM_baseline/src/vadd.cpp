@@ -80,6 +80,8 @@ void vadd(
 #pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 max_read_burst_length = 256
 #pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 max_write_burst_length = 256
 
+#pragma HLS interface s_axilite port=return
+
    int v1_buffer[DATA_SIZE];   //Local memory to store v1
    int v2_buffer[DATA_SIZE];   // Local memory to store v2
 //   int vout_buffer[DATA_SIZE]; // Local Memory to store result

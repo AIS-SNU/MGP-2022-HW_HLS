@@ -108,47 +108,47 @@ void vadd(
 // example when multiple memory accessing arguments need access to
 // global memory simultaneously, user can create multiple master interfaces and
 // can connect to different arguments.
-#pragma HLS INTERFACE m_axi port = in1_0 offset = slave bundle = gmem0  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_1 offset = slave bundle = gmem1  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_2 offset = slave bundle = gmem2  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_3 offset = slave bundle = gmem3  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_4 offset = slave bundle = gmem4  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_5 offset = slave bundle = gmem5  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_6 offset = slave bundle = gmem6  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in1_7 offset = slave bundle = gmem7  depth=DATA_SIZE/16 num_read_outstanding=32
+#pragma HLS INTERFACE m_axi port = in1_0 offset = slave bundle = gmem0  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_1 offset = slave bundle = gmem1  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_2 offset = slave bundle = gmem2  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_3 offset = slave bundle = gmem3  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_4 offset = slave bundle = gmem4  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_5 offset = slave bundle = gmem5  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_6 offset = slave bundle = gmem6  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in1_7 offset = slave bundle = gmem7  num_read_outstanding=32 max_read_burst_length=32
 
 
-#pragma HLS INTERFACE m_axi port = in2_0 offset = slave bundle = gmem8   depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_1 offset = slave bundle = gmem9   depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_2 offset = slave bundle = gmem10  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_3 offset = slave bundle = gmem11  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_4 offset = slave bundle = gmem12  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_5 offset = slave bundle = gmem13  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_6 offset = slave bundle = gmem14  depth=DATA_SIZE/16 num_read_outstanding=32
-#pragma HLS INTERFACE m_axi port = in2_7 offset = slave bundle = gmem15  depth=DATA_SIZE/16 num_read_outstanding=32
+#pragma HLS INTERFACE m_axi port = in2_0 offset = slave bundle = gmem8   num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_1 offset = slave bundle = gmem9   num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_2 offset = slave bundle = gmem10  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_3 offset = slave bundle = gmem11  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_4 offset = slave bundle = gmem12  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_5 offset = slave bundle = gmem13  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_6 offset = slave bundle = gmem14  num_read_outstanding=32 max_read_burst_length=32
+#pragma HLS INTERFACE m_axi port = in2_7 offset = slave bundle = gmem15  num_read_outstanding=32 max_read_burst_length=32
 
 			  
 
-#pragma HLS INTERFACE m_axi port = out_0 offset = slave bundle = gmem00  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_1 offset = slave bundle = gmem10  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_2 offset = slave bundle = gmem20  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_3 offset = slave bundle = gmem30  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_4 offset = slave bundle = gmem40  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_5 offset = slave bundle = gmem50  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_6 offset = slave bundle = gmem60  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_7 offset = slave bundle = gmem70  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_8 offset = slave bundle = gmem80  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_9 offset = slave bundle = gmem90  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_10 offset = slave bundle = gmem100  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_11 offset = slave bundle = gmem110  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_12 offset = slave bundle = gmem120  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_13 offset = slave bundle = gmem130  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_14 offset = slave bundle = gmem140  depth=DATA_SIZE/32 num_write_outstanding=32
-#pragma HLS INTERFACE m_axi port = out_15 offset = slave bundle = gmem150  depth=DATA_SIZE/32 num_write_outstanding=32
+#pragma HLS INTERFACE m_axi port = out_0 offset = slave bundle = gmem00  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_1 offset = slave bundle = gmem10  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_2 offset = slave bundle = gmem20  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_3 offset = slave bundle = gmem30  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_4 offset = slave bundle = gmem40  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_5 offset = slave bundle = gmem50  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_6 offset = slave bundle = gmem60  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_7 offset = slave bundle = gmem70  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_8 offset = slave bundle = gmem80  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_9 offset = slave bundle = gmem90  num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_10 offset = slave bundle = gmem100   num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_11 offset = slave bundle = gmem110   num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_12 offset = slave bundle = gmem120   num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_13 offset = slave bundle = gmem130   num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_14 offset = slave bundle = gmem140   num_write_outstanding=32 max_write_burst_length=32
+#pragma HLS INTERFACE m_axi port = out_15 offset = slave bundle = gmem150   num_write_outstanding=32 max_write_burst_length=32
 int n_size = size;
 int iteration = iter;
 int vector[16][DATA_SIZE];
-#pragma HLS array_partition variable=vector dim=2 factor=16 cyclic
+#pragma array_partition var=vector dim=2 factor=16 cyclic
 
 name0: for(int a=0; a<iteration; a ++){
    name1: for (int i =0; i < n_size; i += DATA_SIZE){

@@ -156,17 +156,6 @@ omp_set_num_threads(16);
   std::cout << "CPU Time:                     " << cpu_duration.count() << " s" << std::endl;
 
   std::cout << "FPGA Speedup:                 " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
-//////////////
-//
-
-  for (int i = 0; i < 32; ++i){
-std::cout << "module:  " << bo_out_map[i] << ", refer:  " << bufReference[i] << std::endl;
-  }
-
-
-//
-////////////
-
 
     auto compare_begin = std::chrono::high_resolution_clock::now();
 
