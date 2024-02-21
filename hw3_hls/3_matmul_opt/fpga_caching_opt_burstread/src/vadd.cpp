@@ -52,9 +52,9 @@ void vadd(const int *in1,  // Read-Only Vector 1
 		  int size		   // matrix len
           ) {
 
-#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0 
-#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1
-#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2
+#pragma HLS INTERFACE m_axi port = in1 offset = slave bundle = gmem0 max_widen_bitwidth=512 max_read_burst_length = 16 
+#pragma HLS INTERFACE m_axi port = in2 offset = slave bundle = gmem1 max_widen_bitwidth=512 max_read_burst_length = 16
+#pragma HLS INTERFACE m_axi port = out offset = slave bundle = gmem2 max_widen_bitwidth=512 max_write_burst_length = 16
 
 //setting constant
 int BUFFER_SIZE = size;
@@ -96,17 +96,19 @@ int right[TILE_SIZE][TILE_SIZE];
         //data import
 		for (int row = rowTile; row < rowTile + TILE_SIZE; row++) {
           for (int inner = innerTile; inner <  innerTile + TILE_SIZE; inner += 16) {
+			int in1_ = row * inners + inner;
 		  	for (int k = 0; k < 16 ; k ++) {
                #pragma HLS unroll
-               left[row-rowTile][inner-innerTile + k]= in1[row * inners + inner+k];
+               left[row-rowTile][inner-innerTile + k]= in1[in1_+k];
             }
 		  }
 		}
 		for (int inner = innerTile; inner <  innerTile + TILE_SIZE; inner++) { 
           for (int col = columnTile; col < columnTile + TILE_SIZE; col += 16) {
+			int in2_ = inner * columns + col;
 		    for (int k = 0; k < 16 ; k ++) {
               #pragma HLS unroll
-              right[inner-innerTile][col-columnTile + k]= in2[inner * columns + col + k];
+              right[inner-innerTile][col-columnTile + k]= in2[in2_ + k];
 		    }
           }
         }
@@ -127,9 +129,10 @@ int right[TILE_SIZE][TILE_SIZE];
 	for(int j = 0; j< TILE_SIZE ; j ++ ){
         for (int i = 0; i< TILE_SIZE ; i += 16 ) {
 		#pragma HLS pipeline II=1
+			int out_ = (rowTile+j) * columns + columnTile+i;
 			for (int k = 0; k < 16 ; k ++) {
 			#pragma HLS unroll
-               out[(rowTile+j) * columns + columnTile + i + k] = vout_buffer[j][i+k] ;
+               out[out_ + k] = vout_buffer[j][i+k] ;
 			}
         }
     }
