@@ -5,7 +5,7 @@
 #include <omp.h>
 #include <vector>
 
-#define MATRIX_LEN 2048*8
+#define MATRIX_LEN 2048*2
 #define DATA_SIZE MATRIX_LEN * MATRIX_LEN
 #define rows MATRIX_LEN
 #define columns MATRIX_LEN
@@ -69,8 +69,8 @@ void matmulImplRowColParallelInnerTiling(const int*left,const int *right,int *re
 
 void matmulImplRowColParallelInnerTiling(const int*left,const int *right,int *result) {
   for (int rowTile = 0; rowTile < rows; rowTile += MATRIX_LEN) {
-    for (int columnTile = 0; columnTile < columns; columnTile += 256) {
-      for (int innerTile = 0; innerTile < inners; innerTile += tileSize_2d) {
+	for (int columnTile = 0; columnTile < columns; columnTile += 256) {
+	  for (int innerTile = 0; innerTile < inners; innerTile += tileSize_2d) {
 	    #pragma omp parallel for num_threads(24) shared(columnTile,innerTile,rowTile,result, left, right) default(none) 
 		for (int row = rowTile; row < rowTile + MATRIX_LEN; row++) {
           int innerTileEnd = std::min(inners, innerTile + tileSize_2d);
