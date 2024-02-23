@@ -64,7 +64,7 @@ $(XCLBIN): $(XOS)
 
 # host rules
 $(HOST_EXE): $(HOST_SRC)
-	g++ $(CXXFLAGS) -o $@ $+ $(LFLAGS) -fopenmp -I /opt/xilinx/Vitis_HLS/2022.2/include/
+	g++ $(CXXFLAGS) -o $@ $+ $(LFLAGS) -fopenmp
 	@echo 'Compiled Host Executable: $(HOST_EXE)'
 
 $(EMCONFIG_FILE):

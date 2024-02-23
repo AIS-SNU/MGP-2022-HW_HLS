@@ -44,7 +44,7 @@ used in kernel.
 #include <iostream>
 
 #define TILE_SIZE 256
-#define multi_thread 2
+#define multi_thread 1
 extern "C" {
 void vadd(const int *in1,  // Read-Only Vector 1
           const int *in2,  // Read-Only Vector 2
@@ -63,7 +63,7 @@ int inners = BUFFER_SIZE;
 int columns = BUFFER_SIZE;
 
 int vout_buffer[multi_thread*TILE_SIZE][multi_thread*TILE_SIZE];
-#pragma HLS array_partition variable=vout_buffer dim=2 factor=16 type= cyclic
+#pragma HLS array_partition variable=vout_buffer dim=2 factor=32 type= cyclic
 #pragma HLS array_partition variable=vout_buffer dim=1 factor=16 type= cyclic
 //burst write
 //init vout_buffer
@@ -72,7 +72,7 @@ int left[multi_thread*TILE_SIZE][TILE_SIZE];
 int right[TILE_SIZE][TILE_SIZE*multi_thread];
 #pragma HLS array_partition variable=left dim=1 factor=16 type= cyclic
 #pragma HLS array_partition variable=left dim=2 factor=16 type= cyclic
-#pragma HLS array_partition variable=right dim=2 factor=16 type= cyclic
+#pragma HLS array_partition variable=right dim=2 factor=32 type= cyclic
 
 
   for (int rowTile = 0; rowTile < rows; rowTile += multi_thread*TILE_SIZE) {
@@ -119,11 +119,11 @@ int right[TILE_SIZE][TILE_SIZE*multi_thread];
         for (int row = rowTile; row < rowTileEnd; row += 16 ) {
           for (int inner = innerTile; inner < innerTileEnd; inner++) {
    			#pragma HLS pipeline II = 1
-            for (int col = columnTile; col < columnTileEnd; col += 16) {
+            for (int col = columnTile; col < columnTileEnd; col += 32) {
 			  #pragma HLS unroll
 			  for(int ii=0; ii < 16; ii++){
 			  #pragma HLS unroll
-                for(int jj=0; jj < 16; jj++){
+                for(int jj=0; jj < 32; jj++){
                   vout_buffer[row-rowTile+ii][col-columnTile+jj] +=  left[row-rowTile+ii][inner-innerTile] * right[inner-innerTile][col-columnTile+jj];
                   
                 }

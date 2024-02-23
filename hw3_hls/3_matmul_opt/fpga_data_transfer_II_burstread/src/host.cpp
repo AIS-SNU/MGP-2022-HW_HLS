@@ -37,28 +37,17 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <math.h>
 #include <omp.h>
+#include <vector>
 
 // XRT includes
 #include "experimental/xrt_bo.h"
 #include "experimental/xrt_device.h"
 #include "experimental/xrt_kernel.h"
 
-#define DATA_SIZE 512*16*8
-#define ALL_DATA DATA_SIZE*8
-#define ITERATION 128
-//extern "C" void DUT_Set_ARG(int *dst[4], int *src, unsigned long long num_elements);
-//extern "C" void DUT_Get_ARG(int *dst, int *src[4], unsigned long long num_elements);
+#define MATRIX_LEN 2048
+#define DATA_SIZE MATRIX_LEN*MATRIX_LEN
 
-//extern "C" void vadd_Set_in1(int **, int *, long);
-//extern "C" void vadd_Get_in1(int *, int **, long);
-
-//extern "C" void vadd_Set_in2(int **, int *, long);
-//extern "C" void vadd_Get_in2(int *, int **, long);
-
-//extern "C" void vadd_Set_out(int **, int *, long);
-//extern "C" void vadd_Get_out(int *, int **, long);
-
-
+using namespace std;
 int main(int argc, char **argv) {
   std::string xclbin_file_name = argv[1];
 
@@ -80,108 +69,37 @@ int main(int argc, char **argv) {
 
 
   std::cout << "Allocate Buffer in Global Memory\n";
-//  auto bo0 = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
-//  auto bo1 = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
-//  auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
-
-
-/*
-int *host_bo0=new int[DATA_SIZE*8];
-int *host_bo1=new int[DATA_SIZE*8];
-int *host_bo_out=new int[DATA_SIZE*16];
-
-for (size_t i = 0; i < DATA_SIZE; ++i) {
-    host_bo0[i] = i;
-    host_bo1[i] = i;
-    host_bo_out[i] = 0;
-
-}
-*/
-xrt::bo bo0[8];
-xrt::bo bo1[8];
-xrt::bo bo_out[16];
-
-int* bo0_map[8];
-int* bo1_map[8];
-int* bo_out_map[16];
-
-
-for (int i = 0; i < 8; i++) {
-    bo0[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i));
-    bo0_map[i] = bo0[i].template map<int*>();
-    bo1[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i+8));
-    bo1_map[i] = bo1[i].template map<int*>();
-}
-
-for (int i = 0; i < 16; i++) {
-    bo_out[i] = xrt::bo(device, DATA_SIZE * sizeof(int), krnl.group_id(i+16));
-    bo_out_map[i] = bo_out[i].template map<int*>();
-}
-
+  auto bo0 = xrt::bo(device, vector_size_bytes, krnl.group_id(0));
+  auto bo1 = xrt::bo(device, vector_size_bytes, krnl.group_id(1));
+  auto bo_out = xrt::bo(device, vector_size_bytes, krnl.group_id(2));
 // Map the contents of the buffer object into host memory
-//  auto bo0_map = bo0.map<int *>();
-//  auto bo1_map = bo1.map<int *>();
-//  auto bo_out_map = bo_out.map<int *>();
-
-
-
-
-for (int i = 0; i < 8; ++i) {	
-  std::fill(bo0_map[i], bo0_map[i] + DATA_SIZE, 0);
-  std::fill(bo1_map[i], bo1_map[i] + DATA_SIZE, 0);
-}
-for (int i = 0; i < 16; ++i) {
-  std::fill(bo_out_map[i], bo_out_map[i] + DATA_SIZE, 0);
-}
+  auto bo0_map = bo0.map<int *>();
+  auto bo1_map = bo1.map<int *>();
+  auto bo_out_map = bo_out.map<int *>();
+  std::fill(bo0_map, bo0_map + DATA_SIZE, 0);
+  std::fill(bo1_map, bo1_map + DATA_SIZE, 0);
+  std::fill(bo_out_map, bo_out_map + DATA_SIZE, 0);
 
   // Create the test data
-  int bufReference[DATA_SIZE*16];
-  for (int i = 0; i < DATA_SIZE*16; ++i) {
-   // bo0_map[i] = i;
-   // bo1_map[i] = i;
+  vector<int> bufReference(DATA_SIZE);
+  for (int i = 0; i < DATA_SIZE; ++i) {
+    bo0_map[i] = i;
+    bo1_map[i] = i;
     bufReference[i] = 0;
   }
 
+  auto cpu_begin = std::chrono::high_resolution_clock::now();
 
-for (int i = 0; i < 8; ++i) {
-    for(int j=0; j< DATA_SIZE ; j++){
-      //bo0_map[i][j] = j;
-      //bo1_map[i][j] = j;
-      bo0_map[i][j] =i+j;
-      bo1_map[i][j] =i+j;
+omp_set_num_threads(16);  
+#pragma omp parallel for 
+    for (int i = 0; i < MATRIX_LEN; i++){
+     for (int k = 0; k < MATRIX_LEN; k++){
+      for (int j = 0; j < MATRIX_LEN; j++){
+        bufReference[i * MATRIX_LEN + j] += bo0_map[i * MATRIX_LEN + k] * bo1_map[k * MATRIX_LEN + j];
+      }
+     }
     }
-}
-/*
-for(int i = 0; i < 8; ++i) {
-    for(int j=0; j<DATA_SIZE ; j++){
-        host_bo0[i*DATA_SIZE + j]= bo0_map[i][j];
-    }
-}
-for (int i = 0; i < 8; ++i) {
-    for(int j=0; j<DATA_SIZE ; j++){
-        host_bo1[i*DATA_SIZE + j]= bo1_map[i][j];
-    }
-}
-*/
- std::cout << "finish allocate\n";
-////////////////////////////////////////////////////////////////////
- auto cpu_begin = std::chrono::high_resolution_clock::now();
-
-omp_set_num_threads(16);
-#pragma omp parallel for
-	for(int i = 0; i < DATA_SIZE; i ++ ){
-       bufReference[i] = i;
-    }
-    for (int i = DATA_SIZE*8; i < DATA_SIZE*9; i ++ ){
-		bufReference[i] = i;
-    }
-
-
   auto cpu_end = std::chrono::high_resolution_clock::now();
-  std::cout << "cpu cal finish\n";
-
-
-
 
   auto fpga_begin = std::chrono::high_resolution_clock::now();
 
@@ -192,42 +110,19 @@ omp_set_num_threads(16);
   //////////////////////////////////////////////////////////////////////////////
   auto host_to_fpga_start = std::chrono::high_resolution_clock::now();
 
-  for (int i = 0; i < 8; i++) { 
-    // sync updated bo contents to board
-    bo0[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
-    bo1[i].sync(XCL_BO_SYNC_BO_TO_DEVICE);
-  }
 
-//  bo0.sync(XCL_BO_SYNC_BO_TO_DEVICE);
-//  bo1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo0.sync(XCL_BO_SYNC_BO_TO_DEVICE);
+  bo1.sync(XCL_BO_SYNC_BO_TO_DEVICE);
   
   auto host_to_fpga_end = std::chrono::high_resolution_clock::now();
   /////////////////////////////////////////////////////////////////////////////
-  std::cout << "synchronize finish\n";
-  std::cout << "set argument\n";
-//   auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
-//   auto run = krnl(bo0[0],bo0[1],bo0[2],bo0[3],
-//		   bo0[4],bo0[5],bo0[6],bo0[7],
-//
-//		   bo1[0],bo1[1],bo1[2],bo1[3],
-//		   bo1[4],bo1[5],bo1[6],bo1[7],
-//
-//		   bo_out[0],bo_out[1],bo_out[2],bo_out[3],
-//		   bo_out[4],bo_out[5],bo_out[6],bo_out[7],
-//		   bo_out[8],bo_out[9],bo_out[10],bo_out[11],
-//		   bo_out[12],bo_out[13],bo_out[14],bo_out[15],
-//		   ALL_DATA
-//		   );
- auto run = xrt::run(krnl);
- for(int i=0;i<8;i++){run.set_arg(i,bo0[i]);}
- for(int i=8;i<16;i++){run.set_arg(i,bo1[i-8]);}
- for(int i=16;i<32;i++){run.set_arg(i,bo_out[i-16]);}
-run.set_arg(32,ALL_DATA*16);
-run.set_arg(33,ITERATION);
 
+
+  std::cout << "synchronize input buffer data to device global memory finish\n";
   auto fpga_cal_begin = std::chrono::high_resolution_clock::now();
-  run.start();
+  auto run = krnl(bo0, bo1, bo_out, MATRIX_LEN);
   run.wait();
+  std::cout << "finish run" << std::endl;
   auto fpga_cal_end = std::chrono::high_resolution_clock::now();
 
   // Get the output;
@@ -235,9 +130,9 @@ run.set_arg(33,ITERATION);
   
   //////////////////////////////////////////////////////////////////////////////
   auto fpga_to_host_start = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 16; i++) {
-    bo_out[i].sync(XCL_BO_SYNC_BO_FROM_DEVICE);
-  }
+
+  bo_out.sync(XCL_BO_SYNC_BO_FROM_DEVICE);
+
   auto fpga_to_host_end = std::chrono::high_resolution_clock::now();
   /////////////////////////////////////////////////////////////////////////////
 
@@ -257,36 +152,21 @@ run.set_arg(33,ITERATION);
   std::chrono::duration<double> fpga_duration = fpga_end - fpga_begin;
   std::cout << "FPGA Time:                    " << fpga_duration.count() << " s" << std::endl;
 
-//  std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
-//  std::cout << "CPU Time:                     " << cpu_duration.count() << " s" << std::endl;
+  std::chrono::duration<double> cpu_duration = cpu_end - cpu_begin;
+  std::cout << "CPU Time:                     " << cpu_duration.count() << " s" << std::endl;
 
- // std::cout << "FPGA Speedup:                 " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
-
-double result = fpga_cal_duration.count();
-int n= ALL_DATA*2*ITERATION;
-result= (float)(n*2)/1000000000/result;
+  std::cout << "FPGA Speedup:                 " << cpu_duration.count() / fpga_duration.count() << " x" << std::endl;
 
     auto compare_begin = std::chrono::high_resolution_clock::now();
-/*
-for (int i = 0; i < 16; ++i) {
-    for(int j=0; j<DATA_SIZE ; j++){
-        host_bo_out[i*DATA_SIZE+j]= bo_out_map[i][j];
-    }
-}*/
-std::cout << "THROUGHPUT:  " << result << std::endl;
 
-//for (int i = ALL_DATA-10; i < ALL_DATA+10; ++i) {
-//   std::cout << "module:  " << host_bo_out[i] << ", refer:  " << bufReference[i] << std::endl;
-//}
-
-   // vadd_Get_out(host_bo_out, bo_out_map ,DATA_SIZE);
     // Validate our results
-//  if (std::memcmp(host_bo_out, bufReference, ALL_DATA*2))
-//    throw std::runtime_error("Value read back does not match reference");
+  if (std::memcmp(&bo_out_map[0], &bufReference[0], DATA_SIZE))
+    throw std::runtime_error("Value read back does not match reference");
     auto compare_end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> compare_duration = compare_end - compare_begin;
   std::cout << "Compare Time:                 " << compare_duration.count() << " s" << std::endl;
+
 
 
   std::cout << "TEST PASSED\n";
