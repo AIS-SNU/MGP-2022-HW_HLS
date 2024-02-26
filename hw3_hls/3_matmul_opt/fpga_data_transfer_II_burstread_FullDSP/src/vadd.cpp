@@ -1,6 +1,6 @@
 #include <iostream>
 
-#define TILE_SIZE 256
+#define TILE_SIZE 64
 #define multi_thread 1
 
 
@@ -29,7 +29,7 @@ int vSize = TILE_SIZE / VDATA_SIZE;
 
 int vout_buffer[TILE_SIZE][TILE_SIZE];
 #pragma HLS array_partition variable=vout_buffer dim=1 factor=16 cyclic
-#pragma HLS array_partition variable=vout_buffer dim=2 factor=16 cyclic
+#pragma HLS array_partition variable=vout_buffer dim=2 factor=32 cyclic
 
 //burst write
 //init vout_buffer
@@ -38,7 +38,7 @@ int right[TILE_SIZE][TILE_SIZE];
 //#pragma HLS array_partition variable=left dim=1 factor=16 cyclic
 //#pragma HLS array_partition variable=right dim=1 factor=16 cyclic
 #pragma HLS array_partition variable=left dim=2 factor=16 cyclic
-#pragma HLS array_partition variable=right dim=2 factor=16 cyclic
+#pragma HLS array_partition variable=right dim=2 factor=32 cyclic
 
   for (int rowTile = 0; rowTile < rows; rowTile += TILE_SIZE) {
     for (int columnTile = 0; columnTile < columns; columnTile += TILE_SIZE) {
@@ -80,20 +80,24 @@ int right[TILE_SIZE][TILE_SIZE];
 		    }
           }
         }
-        
-
-        //calculate
-        for (int row = 0; row < TILE_SIZE; row++) {
-//		#pragma HLS pipeline II=1
-          for (int inner = 0; inner <  TILE_SIZE; inner++) {
-		  #pragma HLS pipeline II=1
-            for (int col = 0; col < TILE_SIZE; col++) {
+              //calculate
+        for (int row = 0; row < TILE_SIZE; row += 16 ) {
+          for (int inner = 0; inner < TILE_SIZE; inner++) {
+            #pragma HLS pipeline II = 1
+            for (int col = 0; col < TILE_SIZE; col += 32) {
               #pragma HLS unroll
-              vout_buffer[row][col] += left[row][inner] * right[inner][col];
+              for(int ii=0; ii < 16; ii++){
+              #pragma HLS unroll
+                for(int jj=0; jj < 32; jj++){
+                vout_buffer[row+ii][col+jj] +=  left[row+ii][inner] * right[inner][col+jj];
+
+                }
+               }
+
             }
           }
         }
-
+  
       }
 /////////////////////////////////one tile finish/////////////////////////////////////////////////////
 	for(int j = 0; j< TILE_SIZE ; j ++ ){

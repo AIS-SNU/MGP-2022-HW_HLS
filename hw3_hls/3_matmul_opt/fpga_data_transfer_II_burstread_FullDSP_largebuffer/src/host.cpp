@@ -44,7 +44,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "experimental/xrt_device.h"
 #include "experimental/xrt_kernel.h"
 
-#define MATRIX_LEN 2048/2
+#define MATRIX_LEN 2048
 #define DATA_SIZE MATRIX_LEN*MATRIX_LEN
 
 using namespace std;
