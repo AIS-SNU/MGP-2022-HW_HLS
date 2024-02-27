@@ -58,7 +58,8 @@ int right[TILE_SIZE][TILE_SIZE];
       for (int innerTile = 0; innerTile < inners; innerTile += TILE_SIZE) {
 //  	  #pragma HLS pipeline II=1
         //data import
-		for (int row = 0; row < TILE_SIZE; row++) {
+		#pragma HLS unroll
+		{for (int row = 0; row < TILE_SIZE; row++) {
 //		#pragma HLS pipeline II=1
           for (int inner = 0; inner < TILE_SIZE; inner += 16) {
 		  #pragma HLS pipeline II=1
@@ -96,7 +97,7 @@ int right[TILE_SIZE][TILE_SIZE];
 
             }
           }
-        }
+        }}
   
       }
 /////////////////////////////////one tile finish/////////////////////////////////////////////////////

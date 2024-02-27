@@ -1,6 +1,6 @@
 #include <iostream>
 
-#define TILE_SIZE 64
+#define TILE_SIZE 256
 #define multi_thread 1
 
 
@@ -41,25 +41,52 @@ int vout_buffer[TILE_SIZE][TILE_SIZE];
 //init vout_buffer
 int left[TILE_SIZE][TILE_SIZE];
 int right[TILE_SIZE][TILE_SIZE];
-//#pragma HLS array_partition variable=left dim=1 factor=16 cyclic
+#pragma HLS array_partition variable=left dim=1 factor=16 cyclic
 //#pragma HLS array_partition variable=right dim=1 factor=16 cyclic
 #pragma HLS array_partition variable=left dim=2 factor=16 cyclic
 #pragma HLS array_partition variable=right dim=2 factor=16 cyclic
+
+int left_1[TILE_SIZE][TILE_SIZE];
+int right_1[TILE_SIZE][TILE_SIZE];
+#pragma HLS array_partition variable=left_1 dim=1 factor=16 cyclic
+//#pragma HLS array_partition variable=right_1 dim=1 factor=16 cyclic
+#pragma HLS array_partition variable=left_1 dim=2 factor=16 cyclic
+#pragma HLS array_partition variable=right_1 dim=2 factor=16 cyclic
+
+//int double_buffer_index_all=rows*columns*inners;
+//int double_buffer_index=0;
+//int double_buffer_index_step = TILE_SIZE*TILE_SIZE*TILE_SIZE;
 
   for (int rowTile = 0; rowTile < rows; rowTile += TILE_SIZE) {
     for (int columnTile = 0; columnTile < columns; columnTile += TILE_SIZE){ 
 //one tile start
 	  resetToZero(vout_buffer);
+	  //for double buffer
+	  int double_buffer_index= -1;
       for (int innerTile = 0; innerTile < inners; innerTile += TILE_SIZE) {
-        //data import
-		readOneTile( left , in1,inners, rowTile, innerTile);
-		readOneTile( right , in2,columns ,innerTile, columnTile);
-        //calculate
-		calculate( vout_buffer, left, right);
+        double_buffer_index = double_buffer_index + 1;
+		if(double_buffer_index == 0){
+		  #pragma HLS unroll
+		  readOneTile( left , in1,inners, rowTile, innerTile);
+		  readOneTile( right , in2,columns ,innerTile, columnTile);
+        }
+		if(double_buffer_index % 2 == 0){
+		  #pragma HLS unroll
+		  //double_buffer_index = double_buffer_index + 1;
+		  calculate( vout_buffer, left, right);
+          readOneTile( left_1 , in1,inners, rowTile, innerTile + TILE_SIZE);
+          readOneTile( right_1 , in2,columns ,innerTile + TILE_SIZE, columnTile);
+        }
+		if(double_buffer_index % 2 == 1){
+          #pragma HLS unroll
+		  //double_buffer_index = double_buffer_index + 1;
+          calculate( vout_buffer, left_1, right_1);
+          readOneTile( left , in1,inners, rowTile, innerTile + TILE_SIZE);
+          readOneTile( right , in2,columns ,innerTile + TILE_SIZE, columnTile);
+        }
       }
-		//export
 	  exportOneTile( vout_buffer, out ,columns, rowTile, columnTile);
-/////////////////////////////////one tile finish
+//one tile finish
     }
   }
 }
